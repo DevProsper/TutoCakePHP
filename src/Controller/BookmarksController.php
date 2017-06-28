@@ -49,23 +49,22 @@ class BookmarksController extends AppController
      *
      * @return \Cake\Network\Response|null Redirects on successful add, renders view otherwise.
      */
-    public function add()
-    {
-        $bookmark = $this->Bookmarks->newEntity();
-        if ($this->request->is('post')) {
-            $bookmark = $this->Bookmarks->patchEntity($bookmark, $this->request->data);
-            if ($this->Bookmarks->save($bookmark)) {
-                $this->Flash->success(__('The bookmark has been saved.'));
-
-                return $this->redirect(['action' => 'index']);
-            }
-            $this->Flash->error(__('The bookmark could not be saved. Please, try again.'));
-        }
-        $users = $this->Bookmarks->Users->find('list', ['limit' => 200]);
-        $tags = $this->Bookmarks->Tags->find('list', ['limit' => 200]);
-        $this->set(compact('bookmark', 'users', 'tags'));
-        $this->set('_serialize', ['bookmark']);
-    }
+     public function add()
+     {
+     $bookmark = $this->Bookmarks->newEntity();
+     if ($this->request->is('post')) {
+         $bookmark = $this->Bookmarks->patchEntity($bookmark, $this->request->data());
+         $bookmark->user_id = $this->Auth->user('id');
+         if ($this->Bookmarks->save($bookmark)) {
+         $this->Flash->success('Le bookmark a été sauvegardé.');
+         return $this->redirect(['action' => 'index']);
+         }
+         $this->Flash->error('Le bookmark ne peut être sauvegardé. Merci de réessayer.');
+     }
+       $tags = $this->Bookmarks->Tags->find('list');
+       $this->set(compact('bookmark', 'tags'));
+       $this->set('_serialize', ['bookmark']);
+     }
 
     /**
      * Edit method
@@ -112,6 +111,25 @@ class BookmarksController extends AppController
         }
 
         return $this->redirect(['action' => 'index']);
+    }
+
+    public function isAuthorized($user){
+        $action = $this->request->params['action'];
+        // Add et index sont toujours permises.
+        if (in_array($action, ['index', 'add', 'tags'])) {
+            return true;
+        }
+        // Tout autre action nécessite un id.
+        if (!$this->request->getParam('pass.0')) {
+            return false;
+        }
+        // Vérifie que le bookmark appartient à l'utilisateur courant.
+        $id = $this->request->getParam('pass.0');
+        $bookmark = $this->Bookmarks->get($id);
+        if ($bookmark->user_id == $user['id']) {
+            return true;
+        }
+        return parent::isAuthorized($user);
     }
 
     public function tags(){

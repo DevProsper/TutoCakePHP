@@ -37,19 +37,57 @@ class AppController extends Controller
      *
      * @return void
      */
-    public function initialize()
-    {
-        parent::initialize();
+    // public function initialize()
+    // {
+    //     parent::initialize();
+    //
+    //     $this->loadComponent('RequestHandler');
+    //     $this->loadComponent('Flash');
+    //     $this->loadComponent('Auth', [
+    //         'authenticate'  =>  'Form' => [
+    //             'fields'  => [
+    //                 'username' => 'email',
+    //                 'password' => 'password'
+    //             ]
+    //         ],
+    //         'loginAction' => [
+    //             'controller' => 'Users',
+    //             'action' => 'login'
+    //         ],
+    //         'unauthorizedRedirect' => $this->referer()
+    //     ]);
+    //     $this->Auth->allow(['display']);
+    //
+    //     /*
+    //      * Enable the following components for recommended CakePHP security settings.
+    //      * see http://book.cakephp.org/3.0/en/controllers/components/security.html
+    //      */
+    //     //$this->loadComponent('Security');
+    //     //$this->loadComponent('Csrf');
+    // }
 
-        $this->loadComponent('RequestHandler');
+    public function initialize(){
         $this->loadComponent('Flash');
-
-        /*
-         * Enable the following components for recommended CakePHP security settings.
-         * see http://book.cakephp.org/3.0/en/controllers/components/security.html
-         */
-        //$this->loadComponent('Security');
-        //$this->loadComponent('Csrf');
+        $this->loadComponent('Auth', [
+            'authenticate' => [
+                'Form' => [
+                    'fields' => [
+                        'username' => 'email',
+                        'password' => 'password'
+                    ]
+                ]
+            ],
+            'loginAction' => [
+                'controller' => 'Users',
+                'action' => 'login'
+            ],
+            // Si l'utilisateur arrive sur une page non-autorisée, on le
+            // redirige sur la page précédente.
+            'unauthorizedRedirect' => $this->referer()
+        ]);
+        // Autorise l'action display pour que notre controller de pages
+        // continue de fonctionner.
+        $this->Auth->allow(['display']);
     }
 
     /**
@@ -65,5 +103,9 @@ class AppController extends Controller
         ) {
             $this->set('_serialize', true);
         }
+    }
+
+    public function isAuthorized($user){
+        return false;
     }
 }
