@@ -113,4 +113,16 @@ class BookmarksController extends AppController
 
         return $this->redirect(['action' => 'index']);
     }
+
+    public function tags(){
+        $tags = $this->request->param('pass');
+        $bookmarks = $this->Bookmarks->find('tagged', [
+            'tags' => $tags
+        ]);
+        // Passe les variables au template de vue (view).
+        $this->set([
+            'bookmarks' => $bookmarks,
+            'tags' => $tags
+        ]);
+    }
 }
