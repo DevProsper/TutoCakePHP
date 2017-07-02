@@ -33,7 +33,7 @@ class BookmarksTable extends Table
      */
 
      public function findTagged(Query $query, array $options){
-       
+
       $bookmarks = $this->find()
         ->select(['id', 'url', 'title', 'description']);
         if (empty($options['tags'])) {
@@ -106,4 +106,41 @@ class BookmarksTable extends Table
 
         return $rules;
     }
+
+    public function beforeSave($event, $entity, $options)
+    {
+      if ($entity->tag_string) {
+          $entity->tags = $this->_buildTags($entity->tag_string);
+      }
+    }
+    protected function _buildTags($tagString)
+    {
+      // Trim tags
+      $newTags = array_map('trim', explode(',', $tagString));
+      // Retire tous les tags vides
+      $newTags = array_filter($newTags);
+      // Réduit les tags dupliqués
+
+      $newTags = array_unique($newTags);
+      $out = [];
+      $query = $this->Tags->find()
+      ->where(['Tags.title IN' => $newTags]);
+      // Retire les tags existants de la liste des tags nouveaux.
+      foreach ($query->extract('title') as $existing) {
+        $index = array_search($existing, $newTags);
+        if ($index !== false) {
+            unset($newTags[$index]);
+        }
+      }
+      // Ajoute les tags existants.
+      foreach ($query as $tag) {
+          $out[] = $tag;
+      }
+      // Ajoute les nouveaux tags.
+      foreach ($newTags as $tag) {
+          $out[] = $this->Tags->newEntity(['title' => $tag]);
+      }
+      return $out;
+    }
+
 }
